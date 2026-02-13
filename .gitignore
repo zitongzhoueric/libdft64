@@ -1,4 +1,10 @@
 .vscode
+.claude
+.cache
+.clangd
+*.log
+*.txt
+*.out
 obj-ia32
 obj-intel64
 angora_tools

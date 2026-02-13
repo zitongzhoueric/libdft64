@@ -1,8 +1,8 @@
 # Dependencies:
 # sudo apt-get install gcc-multilib g++-multilib
 
-CC=clang
-CXX=clang++
+CC=gcc
+CXX=g++
 
 LIBDFT_SRC			= src
 LIBDFT_TOOL			= tools

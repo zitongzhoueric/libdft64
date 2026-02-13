@@ -1,0 +1,58 @@
+{
+  "name": "libdft64 Dev (LLVM 14 + Intel Pin)",
+  "build": {
+    "dockerfile": "../Dockerfile.dev",
+    "context": "..",
+    "args": {
+      "LLVM_VERSION": "14",
+      "GCC_VERSION": "11",
+      "PIN_VERSION": "3.20-98437-gf02b61307-gcc-linux"
+    }
+  },
+  // Make the container's working folder ONLY /workspaces/libdft64
+  "workspaceFolder": "/workspaces/libdft64",
+  // Bind-mount ONLY the libdft64 folder to /workspaces/libdft64
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/libdft64,type=bind,consistency=cached",
+  // 🚫 Disable the automatic extra mount of the Git root
+  "mountWorkspaceGitRoot": "never",
+  "remoteUser": "vscode",
+  "runArgs": [
+    "--cap-add=SYS_PTRACE",
+    "--security-opt",
+    "seccomp=unconfined",
+    "--shm-size=8g"
+  ],
+  "containerEnv": {
+    "LLVM_VERSION": "14",
+    "GCC_VERSION": "11",
+    "PIN_ROOT": "/pin-3.20-98437-gf02b61307-gcc-linux"
+  },
+  "mounts": [
+    "source=/mnt/ssd3/ericzhou/sra/fuzzer/subjects,target=/subjects,type=bind,consistency=cached"
+  ],
+  "postCreateCommand": "echo 'libdft64 dev container ready. PIN_ROOT='$PIN_ROOT",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-python.python",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "ms-vscode.cmake-tools",
+        "twxs.cmake",
+        "ms-azuretools.vscode-docker",
+        "foxundermoon.shell-format",
+        "vadimcn.vscode-lldb",
+        "pejmannikram.vscode-auto-scroll"
+      ],
+      "settings": {
+        "C_Cpp.intelliSenseEngine": "disabled",
+        "clangd.arguments": [
+          "--background-index",
+          "--clang-tidy",
+          "--completion-style=detailed",
+          "--header-insertion=iwyu"
+        ]
+      }
+    }
+  }
+}

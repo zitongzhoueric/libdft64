@@ -24,11 +24,11 @@
 TEST_TOOL_ROOTS := 
 
 # This defines the tests to be run that were not already defined in TEST_TOOL_ROOTS.
-TEST_ROOTS := test_mini
+TEST_ROOTS := test_mini test_mini_v2 test_granularity
 
 # This defines the tools which will be run during the the tests, and were not already defined in
 # TEST_TOOL_ROOTS.
-TOOL_ROOTS := track # nullpin libdft libdft-dta
+TOOL_ROOTS := track track_v2 nullpin libdft libdft-dta instrace tinttrace
 
 # This defines the static analysis tools which will be run during the the tests. They should not
 # be defined in TEST_TOOL_ROOTS. If a test with the same name exists, it should be defined in
@@ -39,7 +39,7 @@ TOOL_ROOTS := track # nullpin libdft libdft-dta
 SA_TOOL_ROOTS :=
 
 # This defines all the applications that will be run during the tests.
-APP_ROOTS := mini_test
+APP_ROOTS := mini_test mini_test_v2 granularity_test
 
 # This defines any additional object files that need to be compiled.
 OBJECT_ROOTS := 
@@ -95,5 +95,14 @@ TOOL_CXXFLAGS += $(LOGGING_FLAGS) -I$(LIBDFT_INC_PATH) -L$(LIBDFT_PATH)
 TOOL_LIBS += -L$(LIBDFT_PATH) -ldft
 
 INPUT_FILE=cur_input
+
+# Custom build rule for mini_test with debug symbols and no optimization
+$(OBJDIR)mini_test$(EXE_SUFFIX): mini_test.cpp
 test_mini: $(OBJDIR)/track$(PINTOOL_SUFFIX) ${OBJDIR}/mini_test$(EXE_SUFFIX)
 	$(PIN) -t $< -- $(OBJDIR)mini_test$(EXE_SUFFIX)  ${INPUT_FILE}
+
+test_mini_v2: $(OBJDIR)/track_v2$(PINTOOL_SUFFIX) ${OBJDIR}/mini_test_v2$(EXE_SUFFIX)
+	$(PIN) -t $< -- $(OBJDIR)mini_test_v2$(EXE_SUFFIX) ${INPUT_FILE}
+
+test_granularity: $(OBJDIR)/track$(PINTOOL_SUFFIX) ${OBJDIR}/granularity_test$(EXE_SUFFIX)
+	$(PIN) -t $< -- $(OBJDIR)granularity_test$(EXE_SUFFIX)
