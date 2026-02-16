@@ -56,6 +56,24 @@ void PIN_FAST_ANALYSIS_CALL m2m_xfer_opw(ADDRINT dst, ADDRINT src);
 void PIN_FAST_ANALYSIS_CALL m2m_xfer_opl(ADDRINT dst, ADDRINT src);
 void PIN_FAST_ANALYSIS_CALL m2m_xfer_opq(ADDRINT dst, ADDRINT src);
 
+void PIN_FAST_ANALYSIS_CALL m2m_xfer_opb_log(ADDRINT addr, ADDRINT dst,
+                                             ADDRINT src);
+void PIN_FAST_ANALYSIS_CALL m2m_xfer_opw_log(ADDRINT addr, ADDRINT dst,
+                                             ADDRINT src);
+void PIN_FAST_ANALYSIS_CALL m2m_xfer_opl_log(ADDRINT addr, ADDRINT dst,
+                                             ADDRINT src);
+void PIN_FAST_ANALYSIS_CALL m2m_xfer_opq_log(ADDRINT addr, ADDRINT dst,
+                                             ADDRINT src);
+
+void PIN_FAST_ANALYSIS_CALL m2r_xfer_opb_l_log(THREADID tid, ADDRINT addr,
+                                               uint32_t dst, ADDRINT src);
+void PIN_FAST_ANALYSIS_CALL m2r_xfer_opw_log(THREADID tid, ADDRINT addr,
+                                             uint32_t dst, ADDRINT src);
+void PIN_FAST_ANALYSIS_CALL m2r_xfer_opl_log(THREADID tid, ADDRINT addr,
+                                             uint32_t dst, ADDRINT src);
+void PIN_FAST_ANALYSIS_CALL m2r_xfer_opq_log(THREADID tid, ADDRINT addr,
+                                             uint32_t dst, ADDRINT src);
+
 void ins_xfer_op(INS ins);
 void ins_xfer_op_predicated(INS ins);
 

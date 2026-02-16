@@ -368,6 +368,55 @@ graph TB
 - **Exchange**: Swap tags between operands
 - **Extension**: Sign/zero extend with tag propagation
 
+### 4.3.1 Instruction Handler Macros
+
+libdft64 uses a family of macros in `ins_helper.h` to insert Pin analysis calls
+with consistent argument layouts. The macros encode three decisions:
+1) operand shape (register, memory, or both), 2) predication, and 3) optional
+PC logging (the `*_LOG` variants add `IARG_INST_PTR`).
+
+**Core macros**:
+- `CALL(fn)`: Insert a simple analysis call with only `IARG_THREAD_ID`.
+- `R_CALL(fn, dst)`: Thread id + a single register index (`REG_INDX(dst)`).
+- `M_CALL_R(fn)`, `M_CALL_W(fn)`: Memory-only analysis with read/write EA.
+- `R2R_CALL(fn, dst, src)`: Thread id + destination register index + source register index.
+- `M2R_CALL(fn, dst)`: Thread id + destination register index + memory read EA.
+- `R2M_CALL(fn, src)`: Thread id + memory write EA + source register index.
+- `M2M_CALL(fn)`: Predicated call with memory write EA + memory read EA.
+- `RR2R_CALL(fn, dst, src1, src2)`: Ternary register ops with three register indices.
+- `M_CLEAR_N(n)`: Clear `n` bytes at memory write EA.
+
+**Predicated macros**:
+- `R2R_CALL_P`, `M2R_CALL_P` use `INS_InsertPredicatedCall` to run only when
+    the instruction actually executes (e.g., conditional moves or string ops).
+
+**Logging macros**:
+- `*_LOG` variants mirror the core macros but also pass `IARG_INST_PTR` so the
+    analysis can log the instruction PC before taint propagation.
+
+### 4.3.2 Instruction Dispatch in `ins_inspect`
+
+`libdft_core.cpp::ins_inspect` is the central routing table that maps XED
+opcodes to handler families. The dispatch is grouped by instruction semantics:
+
+- **Binary ops**: `ADD`, `ADC`, `AND`, `OR`, `XOR`, `SUB`, `SBB`, SIMD variants
+    like `ADDPD`, `XORPS`, `PXOR` use `ins_binary_op`.
+    - Special case: `XOR reg, reg` (same register) is treated as a clear op.
+- **Unitary/mul/div**: `DIV`, `IDIV`, `MUL` use `ins_unitary_op`.
+    - `IMUL` uses unitary or binary depending on operand form.
+- **Transfer ops**: `MOV` and SIMD move/cvt forms (`MOVD`, `MOVAPS`, `CVT*`) use
+    `ins_xfer_op`, except immediate/segment moves which are treated as clear.
+- **Extension ops**: `MOVSX`, `MOVZX`, `MOVSXD`, `CBW`, `CWDE`, `CDQE`, `CWD`,
+    `CDQ`, `CQO` use `ins_movsx_op`, `ins_movsxd_op`, or small helper callbacks.
+- **Predicated transfer**: `CMOV*` uses `ins_xfer_op_predicated`.
+- **Clear ops**: `SETcc`, `RDRAND`, `RDPID`, `RDPMC`, `RDTSC`, `CPUID`, `LAHF`,
+    and some flag-producing instructions use `ins_clear_op` variants.
+- **Exchange/atomic**: `XCHG`, `XADD`, `CMPXCHG` use dedicated handlers.
+- **String ops**: `LODS*`, `MOVS*`, `STOS*` use memory-to-register or memory-to-
+    memory helpers and may be predicated.
+- **Ignored/TODO**: Many control-flow, flag-only, and advanced SIMD ops are
+    currently ignored or logged as uninstrumented for later expansion.
+
 ---
 
 ### 4.4 System Call Hooking

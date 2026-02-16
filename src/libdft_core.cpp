@@ -365,19 +365,19 @@ void ins_inspect(INS ins) {
     ins_xadd_op(ins);
     break;
   case XED_ICLASS_XLAT:
-    M2R_CALL(m2r_xfer_opb_l, REG_AL);
+    M2R_CALL_LOG(m2r_xfer_opb_l_log, REG_AL);
     break;
   case XED_ICLASS_LODSB:
-    M2R_CALL_P(m2r_xfer_opb_l, REG_AL);
+    M2R_CALL_P_LOG(m2r_xfer_opb_l_log, REG_AL);
     break;
   case XED_ICLASS_LODSW:
-    M2R_CALL_P(m2r_xfer_opw, REG_AX);
+    M2R_CALL_P_LOG(m2r_xfer_opw_log, REG_AX);
     break;
   case XED_ICLASS_LODSD:
-    M2R_CALL_P(m2r_xfer_opl, REG_EAX);
+    M2R_CALL_P_LOG(m2r_xfer_opl_log, REG_EAX);
     break;
   case XED_ICLASS_LODSQ:
-    M2R_CALL_P(m2r_xfer_opq, REG_RAX);
+    M2R_CALL_P_LOG(m2r_xfer_opq_log, REG_RAX);
     break;
   case XED_ICLASS_STOSB:
     ins_stosb(ins);
@@ -392,16 +392,16 @@ void ins_inspect(INS ins) {
     ins_stosq(ins);
     break;
   case XED_ICLASS_MOVSQ:
-    M2M_CALL(m2m_xfer_opq);
+    M2M_CALL_LOG(m2m_xfer_opq_log);
     break;
   case XED_ICLASS_MOVSD:
-    M2M_CALL(m2m_xfer_opl);
+    M2M_CALL_LOG(m2m_xfer_opl_log);
     break;
   case XED_ICLASS_MOVSW:
-    M2M_CALL(m2m_xfer_opw);
+    M2M_CALL_LOG(m2m_xfer_opw_log);
     break;
   case XED_ICLASS_MOVSB:
-    M2M_CALL(m2m_xfer_opb);
+    M2M_CALL_LOG(m2m_xfer_opb_log);
     break;
   case XED_ICLASS_SALC:
     ins_clear_op(ins);

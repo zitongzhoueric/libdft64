@@ -86,6 +86,38 @@
         MTAG(ADDR + 28), MTAG(ADDR + 29), MTAG(ADDR + 30), MTAG(ADDR + 31),    \
   }
 
+#ifndef LIBDFT_TAINT_LOG_GUARD
+#define LIBDFT_TAINT_LOG_GUARD 1
+#endif
+
+#if LIBDFT_TAINT_LOG_GUARD
+#define LIBDFT_GUARD_REG_IDX(idx, pc)                                          \
+  do {                                                                         \
+    if ((idx) >= GRP_NUM) {                                                    \
+      LOGD("[guard] invalid reg index=%u at pc=%p\n", (idx),                  \
+           reinterpret_cast<void *>(static_cast<ADDRINT>(pc)));                \
+      return;                                                                  \
+    }                                                                          \
+  } while (0)
+
+#define LIBDFT_GUARD_MEM_EA(addr, pc)                                          \
+  do {                                                                         \
+    if ((addr) == 0) {                                                         \
+      LOGD("[guard] null memory EA at pc=%p\n",                               \
+           reinterpret_cast<void *>(static_cast<ADDRINT>(pc)));                \
+      return;                                                                  \
+    }                                                                          \
+  } while (0)
+#else
+#define LIBDFT_GUARD_REG_IDX(idx, pc)                                          \
+  do {                                                                         \
+  } while (0)
+
+#define LIBDFT_GUARD_MEM_EA(addr, pc)                                          \
+  do {                                                                         \
+  } while (0)
+#endif
+
 // https://software.intel.com/sites/landingpage/pintool/docs/97619/Pin/html/group__REG__CPU__IA32.html
 inline size_t REG_INDX(REG reg) {
   if (reg == REG_INVALID())
@@ -360,6 +392,61 @@ inline size_t REG_INDX(REG reg) {
   INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)fn, IARG_FAST_ANALYSIS_CALL,     \
                  IARG_THREAD_ID, IARG_UINT32, REG_INDX(dst), IARG_UINT32,      \
                  REG_INDX(src1), IARG_UINT32, REG_INDX(src2), IARG_END)
+
+/* Logging-enabled macros that pass IARG_INST_PTR for taint tracing */
+
+#define CALL_LOG(fn)                                                           \
+  INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)fn, IARG_FAST_ANALYSIS_CALL,     \
+                 IARG_THREAD_ID, IARG_INST_PTR, IARG_END)
+
+#define R_CALL_LOG(fn, dst)                                                    \
+  INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)fn, IARG_FAST_ANALYSIS_CALL,     \
+                 IARG_THREAD_ID, IARG_INST_PTR, IARG_UINT32, REG_INDX(dst), IARG_END)
+
+#define M_CALL_W_LOG(fn)                                                       \
+  INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)fn, IARG_FAST_ANALYSIS_CALL,     \
+                 IARG_THREAD_ID, IARG_INST_PTR, IARG_MEMORYWRITE_EA, IARG_END)
+
+#define M_CALL_R_LOG(fn)                                                       \
+  INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)fn, IARG_FAST_ANALYSIS_CALL,     \
+                 IARG_THREAD_ID, IARG_INST_PTR, IARG_MEMORYREAD_EA, IARG_END)
+
+#define R2R_CALL_LOG(fn, dst, src)                                             \
+  INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)fn, IARG_FAST_ANALYSIS_CALL,     \
+                 IARG_THREAD_ID, IARG_INST_PTR, IARG_UINT32, REG_INDX(dst),    \
+                 IARG_UINT32, REG_INDX(src), IARG_END)
+
+#define R2R_CALL_P_LOG(fn, dst, src)                                           \
+  INS_InsertPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)fn,                    \
+                           IARG_FAST_ANALYSIS_CALL, IARG_THREAD_ID,            \
+                           IARG_INST_PTR, IARG_UINT32, REG_INDX(dst),          \
+                           IARG_UINT32, REG_INDX(src), IARG_END)
+
+#define M2R_CALL_LOG(fn, dst)                                                  \
+  INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)fn, IARG_FAST_ANALYSIS_CALL,     \
+                 IARG_THREAD_ID, IARG_INST_PTR, IARG_UINT32, REG_INDX(dst),    \
+                 IARG_MEMORYREAD_EA, IARG_END);
+
+#define M2R_CALL_P_LOG(fn, dst)                                                \
+  INS_InsertPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)fn,                    \
+                           IARG_FAST_ANALYSIS_CALL, IARG_THREAD_ID,            \
+                           IARG_INST_PTR, IARG_UINT32, REG_INDX(dst),          \
+                           IARG_MEMORYREAD_EA, IARG_END);
+
+#define R2M_CALL_LOG(fn, src)                                                  \
+  INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)fn, IARG_FAST_ANALYSIS_CALL,     \
+                 IARG_THREAD_ID, IARG_INST_PTR, IARG_MEMORYWRITE_EA,           \
+                 IARG_UINT32, REG_INDX(src), IARG_END);
+
+#define M2M_CALL_LOG(fn)                                                       \
+  INS_InsertPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)fn,                    \
+                           IARG_FAST_ANALYSIS_CALL, IARG_INST_PTR,             \
+                           IARG_MEMORYWRITE_EA, IARG_MEMORYREAD_EA, IARG_END);
+
+#define RR2R_CALL_LOG(fn, dst, src1, src2)                                     \
+  INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)fn, IARG_FAST_ANALYSIS_CALL,     \
+                 IARG_THREAD_ID, IARG_INST_PTR, IARG_UINT32, REG_INDX(dst),    \
+                 IARG_UINT32, REG_INDX(src1), IARG_UINT32, REG_INDX(src2), IARG_END)
 
 #define INS_MemoryWriteSize(isn) \
   INS_MemoryOperandSize(ins, OP_0)
